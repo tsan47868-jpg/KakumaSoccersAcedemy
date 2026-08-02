@@ -1,0 +1,6 @@
+{
+  "name": "Kakuma Soccer Academy",
+  "description": "Community-Based Organization in Kakuma using football, mentorship, education and teamwork to nurture young talent and create positive opportunities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

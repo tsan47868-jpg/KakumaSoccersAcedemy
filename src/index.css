@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #123764;
+  --color-navy-dark: #0c2545;
+  --color-navy-light: #1b4d8a;
+  --color-gold: #FDBD55;
+  --color-gold-hover: #f1ab3b;
+  --color-gold-light: #fff3db;
+  --color-light-gold: #FFF7E8;
+  --color-light-navy: #EDF3FA;
+  --color-dark-text: #111827;
+}
+
+@layer utilities {
+  .bg-navy { background-color: #123764; }
+  .bg-navy-dark { background-color: #0c2545; }
+  .text-navy { color: #123764; }
+  .border-navy { border-color: #123764; }
+  
+  .bg-gold { background-color: #FDBD55; }
+  .text-gold { color: #FDBD55; }
+  .border-gold { border-color: #FDBD55; }
+  
+  .bg-light-gold { background-color: #FFF7E8; }
+  .bg-light-navy { background-color: #EDF3FA; }
+  .text-dark-main { color: #111827; }
+
+  /* Utility to hide scrollbars while maintaining scrollability */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom smooth scrolling and custom focus styles */
+html {
+  scroll-behavior: smooth;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Custom scrollbar matching brand colors */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #EDF3FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #123764;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FDBD55;
+}
+
