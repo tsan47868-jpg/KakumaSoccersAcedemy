@@ -15,6 +15,7 @@ import { ContactSection } from './components/ContactSection';
 import { JoinModal } from './components/JoinModal';
 import { DonateModal } from './components/DonateModal';
 import { Footer } from './components/Footer';
+import { CookieConsent } from './components/CookieConsent';
 
 // Standalone Page Imports
 import { AboutPage } from './components/AboutPage';
@@ -226,6 +227,8 @@ export function App() {
         isOpen={isDonateOpen}
         onClose={() => setIsDonateOpen(false)}
       />
+
+      <CookieConsent />
     </div>
   );
 }
