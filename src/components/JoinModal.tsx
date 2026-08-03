@@ -26,6 +26,28 @@ export const JoinModal: React.FC<JoinModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const submission = {
+      id: `join-${Date.now()}`,
+      type: 'join',
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      parentName: formData.parentName,
+      category: formData.category,
+      location: formData.locationInKakuma,
+      notes: formData.notes,
+      createdAt: new Date().toLocaleString(),
+    };
+
+    const existing = typeof window !== 'undefined' ? window.localStorage.getItem('kakuma-form-submissions') : null;
+    const submissions = existing ? JSON.parse(existing) : [];
+    submissions.unshift(submission);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('kakuma-form-submissions', JSON.stringify(submissions));
+    }
+
     setSubmitted(true);
   };
 

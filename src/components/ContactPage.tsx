@@ -32,6 +32,27 @@ export const ContactPage: React.FC<ContactPageProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName || !form.message) return;
+
+    const submission = {
+      id: `contact-${Date.now()}`,
+      type: 'contact',
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      reason: form.reason,
+      subject: form.subject,
+      message: form.message,
+      createdAt: new Date().toLocaleString(),
+    };
+
+    const existing = typeof window !== 'undefined' ? window.localStorage.getItem('kakuma-form-submissions') : null;
+    const submissions = existing ? JSON.parse(existing) : [];
+    submissions.unshift(submission);
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('kakuma-form-submissions', JSON.stringify(submissions));
+    }
+
     setSubmitted(true);
   };
 

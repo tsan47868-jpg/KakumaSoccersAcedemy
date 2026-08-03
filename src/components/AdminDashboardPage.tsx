@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -22,20 +23,64 @@ interface AdminDashboardPageProps {
   onBackToHome: () => void;
 }
 
+type AdminTab = 'overview' | 'registrations' | 'fixtures' | 'stories' | 'messages';
+
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onBackToHome,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'registrations' | 'fixtures' | 'stories' | 'messages'>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [fixturesList, setFixturesList] = useState(FIXTURES_DATA);
   const [editingScoreId, setEditingScoreId] = useState<string | null>(null);
   const [homeScoreInput, setHomeScoreInput] = useState<number>(0);
   const [awayScoreInput, setAwayScoreInput] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [storiesList, setStoriesList] = useState(NEWS_ARTICLES);
+  const [newStory, setNewStory] = useState({ title: '', summary: '', category: 'Community' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
 
   const sampleRegistrations = [
     { id: 'reg-1', name: 'Joseph Deng', age: 16, ageGroup: 'U17', guardian: 'Mary Achan', phone: '+254 712 345 678', zone: 'Kakuma 1', date: 'Aug 1, 2026' },
     { id: 'reg-2', name: 'Amina Mohamed', age: 15, ageGroup: 'Girls', guardian: 'Fatima Z.', phone: '+254 723 456 789', zone: 'Kalobeyei', date: 'Jul 28, 2026' },
     { id: 'reg-3', name: 'Samuel Lual', age: 14, ageGroup: 'U15', guardian: 'Peter L.', phone: '+254 734 567 890', zone: 'Kakuma 2', date: 'Jul 25, 2026' },
   ];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const savedAuth = window.localStorage.getItem('kakuma-admin-auth');
+    if (savedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+
+    const storedSubmissions = window.localStorage.getItem('kakuma-form-submissions');
+    if (storedSubmissions) {
+      try {
+        setSubmissions(JSON.parse(storedSubmissions));
+      } catch {
+        setSubmissions([]);
+      }
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (adminEmail.trim().toLowerCase() === 'admin@kakuma.org' && adminPassword === 'kakuma2026') {
+      setIsAuthenticated(true);
+      setLoginError('');
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('kakuma-admin-auth', 'true');
+      }
+      return;
+    }
+
+    setLoginError('Incorrect admin email or password.');
+  };
 
   const handleUpdateScore = (fixId: string) => {
     setFixturesList(
@@ -53,6 +98,135 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     );
     setEditingScoreId(null);
   };
+
+  const joinSubmissions = submissions.filter((submission) => submission.type === 'join');
+  const contactSubmissions = submissions.filter((submission) => submission.type === 'contact');
+  const registrationRows = joinSubmissions.length > 0
+    ? joinSubmissions.map((submission) => ({
+        id: submission.id,
+        name: submission.fullName,
+        age: '—',
+        ageGroup: submission.category || 'Open',
+        guardian: submission.parentName || 'N/A',
+        phone: submission.phone || 'N/A',
+        zone: submission.location || 'N/A',
+        date: submission.createdAt || 'Pending',
+      }))
+    : sampleRegistrations;
+
+  const handleAddStory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStory.title.trim() || !newStory.summary.trim()) return;
+
+    const story = {
+      id: `story-${Date.now()}`,
+      title: newStory.title.trim(),
+      summary: newStory.summary.trim(),
+      category: newStory.category,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    };
+
+    setStoriesList([story, ...storiesList]);
+    setNewStory({ title: '', summary: '', category: 'Community' });
+  };
+
+  const handleRemoveStory = (storyId: string) => {
+    setStoriesList(storiesList.filter((story) => story.id !== storyId));
+  };
+
+  const toggleReviewed = (id: string) => {
+    setReviewedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const filteredRegistrationRows = registrationRows.filter((reg) => {
+    const haystack = `${reg.name} ${reg.guardian} ${reg.phone} ${reg.zone}`.toLowerCase();
+    return haystack.includes(searchTerm.toLowerCase());
+  });
+
+  const filteredSubmissions = submissions.filter((submission) => {
+    const haystack = `${submission.fullName} ${submission.email || ''} ${submission.phone || ''} ${submission.reason || ''}`.toLowerCase();
+    return haystack.includes(searchTerm.toLowerCase());
+  });
+
+  const overviewStats = [
+    {
+      title: 'Registered Players',
+      value: `${joinSubmissions.length + 20}+`,
+      note: '↑ Active Across 6 Squads',
+      noteClass: 'text-emerald-600',
+    },
+    {
+      title: 'League Fixtures',
+      value: `${fixturesList.length}`,
+      note: '2 Matches Scheduled This Weekend',
+      noteClass: 'text-[#123764]',
+    },
+    {
+      title: 'Published Stories',
+      value: `${storiesList.length}`,
+      note: 'Community & Match Recaps',
+      noteClass: 'text-amber-600',
+    },
+    {
+      title: 'Pending Inquiries',
+      value: `${contactSubmissions.length}`,
+      note: 'Partnerships & Equipment',
+      noteClass: 'text-purple-600',
+    },
+  ];
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#FFF7E8] text-[#111827] flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md rounded-3xl border-2 border-[#FDBD55] bg-white p-8 shadow-2xl">
+          <div className="inline-flex items-center gap-2 bg-[#FDBD55] text-[#123764] px-3 py-1 rounded-full mb-4 text-[11px] font-black uppercase tracking-widest">
+            <Shield className="w-4 h-4" />
+            <span>Admin Access</span>
+          </div>
+
+          <h2 className="text-2xl font-black font-serif text-[#123764] uppercase">Sign in to manage submissions</h2>
+          <p className="mt-2 text-sm text-gray-600">Use the staff credentials below to access the admin dashboard.</p>
+
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Email</label>
+              <input
+                type="email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                placeholder="admin@kakuma.org"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Password</label>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                placeholder="kakuma2026"
+              />
+            </div>
+
+            {loginError && <p className="text-sm font-semibold text-red-600">{loginError}</p>}
+
+            <button
+              type="submit"
+              className="w-full rounded-full bg-[#123764] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0c2545]"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <p className="mt-4 text-xs text-gray-500">Default credentials: admin@kakuma.org / kakuma2026</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF7E8] text-[#111827] pb-20">
@@ -87,6 +261,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               { key: 'registrations', label: 'Player Registrations' },
               { key: 'fixtures', label: 'Fixtures & Scores' },
               { key: 'stories', label: 'News Stories' },
+              { key: 'messages', label: 'Messages & Emails' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -112,28 +287,42 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {activeTab === 'overview' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm space-y-2">
-                <span className="text-xs font-extrabold text-gray-500 uppercase">Registered Players</span>
-                <span className="text-3xl font-black font-serif text-[#123764] block">100+</span>
-                <span className="text-[11px] text-emerald-600 font-bold">↑ Active Across 6 Squads</span>
+              {overviewStats.map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  whileHover={{ y: -6, scale: 1.01, transition: { duration: 0.2 } }}
+                  className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm space-y-2"
+                >
+                  <span className="text-xs font-extrabold text-gray-500 uppercase">{stat.title}</span>
+                  <span className="text-3xl font-black font-serif text-[#123764] block">{stat.value}</span>
+                  <span className={`text-[11px] font-bold ${stat.noteClass}`}>{stat.note}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 rounded-3xl border-2 border-[#FDBD55] bg-[#071D3B] p-6 text-white shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#FDBD55]" />
+                  <h3 className="text-lg font-black uppercase">Quick Admin Actions</h3>
+                </div>
+                <p className="mt-2 text-sm text-white/80">Use the dashboard to review new applications, publish stories, and keep staff informed.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button onClick={() => setActiveTab('registrations')} className="rounded-full bg-[#FDBD55] px-4 py-2 text-sm font-black text-[#123764]">Review Registrations</button>
+                  <button onClick={() => setActiveTab('messages')} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">Check Messages</button>
+                  <button onClick={() => setActiveTab('stories')} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">Publish Story</button>
+                </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm space-y-2">
-                <span className="text-xs font-extrabold text-gray-500 uppercase">League Fixtures</span>
-                <span className="text-3xl font-black font-serif text-[#123764] block">{fixturesList.length}</span>
-                <span className="text-[11px] text-[#123764] font-bold">2 Matches Scheduled This Weekend</span>
-              </div>
-
-              <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm space-y-2">
-                <span className="text-xs font-extrabold text-gray-500 uppercase">Published Stories</span>
-                <span className="text-3xl font-black font-serif text-[#123764] block">{NEWS_ARTICLES.length}</span>
-                <span className="text-[11px] text-amber-600 font-bold">Community & Match Recaps</span>
-              </div>
-
-              <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm space-y-2">
-                <span className="text-xs font-extrabold text-gray-500 uppercase">Pending Inquiries</span>
-                <span className="text-3xl font-black font-serif text-[#123764] block">4</span>
-                <span className="text-[11px] text-purple-600 font-bold">Partnerships & Equipment</span>
+              <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-black text-[#123764] uppercase">Staff Note</h3>
+                <p className="mt-2 text-sm text-gray-600">Keep this dashboard fresh by posting weekly updates for volunteers and coaches.</p>
+                <div className="mt-4 rounded-2xl bg-[#FFF7E8] p-4 text-sm font-semibold text-[#123764]">
+                  Next review: Saturday training session at Kakuma Main Pitch.
+                </div>
               </div>
             </div>
           </div>
@@ -142,17 +331,28 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {/* REGISTRATIONS TAB */}
         {activeTab === 'registrations' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">
                 Player Enrollment Submissions
               </h3>
-              <button
-                onClick={() => alert('Exporting registrations as CSV...')}
-                className="bg-[#123764] text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-1.5"
-              >
-                <Download className="w-3.5 h-3.5 text-[#FDBD55]" />
-                <span>Export Registrations (CSV)</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600 shadow-sm">
+                  <Search className="w-3.5 h-3.5 text-[#123764]" />
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search player"
+                    className="w-28 bg-transparent outline-none"
+                  />
+                </label>
+                <button
+                  onClick={() => alert('Exporting registrations as CSV...')}
+                  className="bg-[#123764] text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#FDBD55]" />
+                  <span>Export Registrations (CSV)</span>
+                </button>
+              </div>
             </div>
 
             <div className="bg-white rounded-3xl overflow-hidden border-2 border-gray-200 shadow-md">
@@ -168,7 +368,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {sampleRegistrations.map((reg) => (
+                  {filteredRegistrationRows.map((reg) => (
                     <tr key={reg.id} className="hover:bg-gray-50">
                       <td className="p-4 font-bold text-[#123764]">{reg.name}</td>
                       <td className="p-4">
@@ -185,6 +385,146 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* STORIES TAB */}
+        {activeTab === 'stories' && (
+          <div className="space-y-6">
+            <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">Publish Community Stories</h3>
+              <p className="mt-2 text-sm text-gray-600">Add new academy stories, match reports, or volunteer highlights directly from the dashboard.</p>
+
+              <form onSubmit={handleAddStory} className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Story Title</label>
+                  <input
+                    value={newStory.title}
+                    onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                    placeholder="e.g. Girls Team Wins Weekend Cup"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Story Summary</label>
+                  <textarea
+                    value={newStory.summary}
+                    onChange={(e) => setNewStory({ ...newStory, summary: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                    rows={3}
+                    placeholder="Write the story details here..."
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Category</label>
+                  <div className="relative">
+                    <select
+                      value={newStory.category}
+                      onChange={(e) => setNewStory({ ...newStory, category: e.target.value })}
+                      className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 pr-10 text-sm shadow-sm transition hover:border-[#FDBD55] focus:border-[#123764] focus:outline-none"
+                    >
+                      <option value="Community">Community</option>
+                      <option value="Matches">Matches</option>
+                      <option value="Girls">Girls</option>
+                      <option value="Education">Education</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[#123764]">
+                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.25 7.5 10 12.25 14.75 7.5H5.25Z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-end">
+                  <button type="submit" className="w-full rounded-full bg-[#123764] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0c2545]">
+                    Add Story
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {storiesList.map((story) => (
+                <div key={story.id} className="rounded-3xl border-2 border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="rounded-full bg-[#EDF3FA] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#123764]">
+                        {story.category}
+                      </span>
+                      <h4 className="mt-3 text-lg font-black text-[#123764]">{story.title}</h4>
+                    </div>
+                    <button onClick={() => handleRemoveStory(story.id)} className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600">
+                      Remove
+                    </button>
+                  </div>
+                  <p className="mt-3 text-sm text-gray-600">{story.summary}</p>
+                  <p className="mt-3 text-xs font-semibold text-gray-400">{story.date}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* MESSAGES & EMAILS TAB */}
+        {activeTab === 'messages' && (
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">
+                Contact Messages & Enrollment Emails
+              </h3>
+              <label className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600 shadow-sm">
+                <Search className="w-3.5 h-3.5 text-[#123764]" />
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search message"
+                  className="w-28 bg-transparent outline-none"
+                />
+              </label>
+            </div>
+
+            {filteredSubmissions.length === 0 ? (
+              <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
+                No submissions collected yet. Forms submitted from the website will appear here automatically.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredSubmissions.map((submission) => (
+                  <div key={submission.id} className="rounded-3xl border-2 border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[#123764] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#FDBD55]">
+                        {submission.type === 'join' ? 'Join Application' : 'Contact Message'}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-500">{submission.createdAt}</span>
+                      <button
+                        onClick={() => toggleReviewed(submission.id)}
+                        className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${reviewedIds.includes(submission.id) ? 'bg-emerald-100 text-emerald-700' : 'bg-[#FFF7E8] text-[#123764]'}`}
+                      >
+                        {reviewedIds.includes(submission.id) ? 'Reviewed' : 'Mark Reviewed'}
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h4 className="text-lg font-black text-[#123764]">{submission.fullName}</h4>
+                        <p className="text-sm text-gray-700">{submission.email || 'No email provided'}</p>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p><span className="font-semibold text-[#123764]">Phone:</span> {submission.phone || 'N/A'}</p>
+                        <p><span className="font-semibold text-[#123764]">Location:</span> {submission.location || submission.reason || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 rounded-2xl bg-[#FFF7E8] p-3 text-sm text-gray-700">
+                      {submission.message || submission.notes || 'No additional details provided.'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
