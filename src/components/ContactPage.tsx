@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { saveSubmission } from '../lib/submissions';
 import {
   ArrowLeft,
   MapPin,
@@ -29,7 +30,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName || !form.message) return;
 
@@ -45,14 +46,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({
       createdAt: new Date().toLocaleString(),
     };
 
-    const existing = typeof window !== 'undefined' ? window.localStorage.getItem('kakuma-form-submissions') : null;
-    const submissions = existing ? JSON.parse(existing) : [];
-    submissions.unshift(submission);
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('kakuma-form-submissions', JSON.stringify(submissions));
-    }
-
+    await saveSubmission(submission);
     setSubmitted(true);
   };
 

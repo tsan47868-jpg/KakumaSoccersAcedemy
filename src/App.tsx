@@ -46,6 +46,16 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (activeSection === 'admin') {
+    return (
+      <div className="min-h-screen bg-[#FFF7E8] text-[#111827] font-sans selection:bg-[#FDBD55] selection:text-[#123764]">
+        <AdminDashboardPage
+          onBackToHome={() => navigateTo('home')}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FFF7E8] text-[#111827] font-sans selection:bg-[#FDBD55] selection:text-[#123764] flex flex-col">
       {/* Short Branded Loading Animation (< 2 seconds) */}
@@ -156,12 +166,6 @@ export function App() {
           />
         )}
 
-        {activeSection === 'admin' && (
-          <AdminDashboardPage
-            onBackToHome={() => navigateTo('home')}
-          />
-        )}
-
         {activeSection === 'home' && (
           <>
             {/* Hero Section */}
@@ -200,8 +204,8 @@ export function App() {
 
             {/* Frequently Asked Questions (Parents & Volunteers) */}
             <FaqSection
-              onOpenJoin={() => setIsJoinOpen(true)}
-              onOpenDonate={() => setIsDonateOpen(true)}
+              onOpenJoin={() => navigateTo('register')}
+              onOpenDonate={() => navigateTo('donate')}
             />
 
             {/* Direct Contact Form & Academy Headquarters */}

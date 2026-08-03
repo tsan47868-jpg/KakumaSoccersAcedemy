@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { saveSubmission } from '../lib/submissions';
 import { Logo } from './Logo';
 import { Heart, MapPin, Mail, Phone, ShieldCheck, ArrowUp, Lock, Send, CheckCircle2, Bell, Sparkles } from 'lucide-react';
 
@@ -16,9 +17,23 @@ export const Footer: React.FC<FooterProps> = ({
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    const submission = {
+      id: `subscribe-${Date.now()}`,
+      type: 'subscribe',
+      fullName: 'Newsletter Subscriber',
+      email,
+      phone: 'N/A',
+      reason: 'Newsletter Subscription',
+      subject: 'Subscribe to updates',
+      message: 'Requested monthly match recaps and youth updates.',
+      createdAt: new Date().toLocaleString(),
+    };
+
+    await saveSubmission(submission);
     setSubscribed(true);
   };
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { loadSubmissions } from '../lib/submissions';
+import { verifyAdminCredentials } from '../lib/admin';
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -16,6 +18,7 @@ import {
   Sparkles,
   Shield,
   Download,
+  LogOut,
 } from 'lucide-react';
 import { FIXTURES_DATA, STANDINGS_DATA, NEWS_ARTICLES } from '../data/mockData';
 
@@ -37,11 +40,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [storiesList, setStoriesList] = useState(NEWS_ARTICLES);
   const [newStory, setNewStory] = useState({ title: '', summary: '', category: 'Community' });
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const [newFixture, setNewFixture] = useState({
+    date: '',
+    time: '',
+    homeTeam: '',
+    awayTeam: '',
+    venue: '',
+    division: 'Academy League',
+  });
 
   const sampleRegistrations = [
     { id: 'reg-1', name: 'Joseph Deng', age: 16, ageGroup: 'U17', guardian: 'Mary Achan', phone: '+254 712 345 678', zone: 'Kakuma 1', date: 'Aug 1, 2026' },
@@ -57,50 +69,95 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       setIsAuthenticated(true);
     }
 
-    const storedSubmissions = window.localStorage.getItem('kakuma-form-submissions');
-    if (storedSubmissions) {
+    const hydrateSubmissions = async () => {
+      const storedSubmissions = await loadSubmissions();
+      setSubmissions(storedSubmissions || []);
+    };
+
+    const storedFixtures = window.localStorage.getItem('kakuma-fixtures');
+    if (storedFixtures) {
       try {
-        setSubmissions(JSON.parse(storedSubmissions));
+        setFixturesList(JSON.parse(storedFixtures));
       } catch {
-        setSubmissions([]);
+        setFixturesList(FIXTURES_DATA);
       }
     }
+
+    hydrateSubmissions();
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError('');
 
-    if (adminEmail.trim().toLowerCase() === 'admin@kakuma.org' && adminPassword === 'kakuma2026') {
-      setIsAuthenticated(true);
-      setLoginError('');
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('kakuma-admin-auth', 'true');
+    try {
+      const isValid = await verifyAdminCredentials(adminEmail, adminPassword);
+
+      if (isValid) {
+        setIsAuthenticated(true);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('kakuma-admin-auth', 'true');
+        }
+        return;
       }
-      return;
-    }
 
-    setLoginError('Incorrect admin email or password.');
+      setLoginError('Incorrect admin email or password.');
+    } catch (error) {
+      console.error('Admin login failed', error);
+      setLoginError('Unable to reach the admin service right now. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const persistFixtures = (nextFixtures: typeof fixturesList) => {
+    setFixturesList(nextFixtures);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('kakuma-fixtures', JSON.stringify(nextFixtures));
+    }
   };
 
   const handleUpdateScore = (fixId: string) => {
-    setFixturesList(
-      fixturesList.map((f) => {
-        if (f.id === fixId) {
-          return {
-            ...f,
-            homeScore: homeScoreInput,
-            awayScore: awayScoreInput,
-            status: 'completed' as const,
-          };
-        }
-        return f;
-      })
-    );
+    const updatedFixtures = fixturesList.map((f) => {
+      if (f.id === fixId) {
+        return {
+          ...f,
+          homeScore: homeScoreInput,
+          awayScore: awayScoreInput,
+          status: 'completed' as const,
+        };
+      }
+      return f;
+    });
+
+    persistFixtures(updatedFixtures);
     setEditingScoreId(null);
+  };
+
+  const handleAddFixture = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFixture.date || !newFixture.homeTeam || !newFixture.awayTeam || !newFixture.venue) return;
+
+    const fixture = {
+      id: `fixture-${Date.now()}`,
+      date: newFixture.date,
+      time: newFixture.time || 'TBD',
+      homeTeam: newFixture.homeTeam.trim(),
+      awayTeam: newFixture.awayTeam.trim(),
+      venue: newFixture.venue.trim(),
+      division: newFixture.division,
+      status: 'upcoming' as const,
+    };
+
+    const nextFixtures = [fixture, ...fixturesList];
+    persistFixtures(nextFixtures);
+    setNewFixture({ date: '', time: '', homeTeam: '', awayTeam: '', venue: '', division: 'Academy League' });
   };
 
   const joinSubmissions = submissions.filter((submission) => submission.type === 'join');
   const contactSubmissions = submissions.filter((submission) => submission.type === 'contact');
+  const subscribeSubmissions = submissions.filter((submission) => submission.type === 'subscribe');
   const registrationRows = joinSubmissions.length > 0
     ? joinSubmissions.map((submission) => ({
         id: submission.id,
@@ -134,6 +191,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     setStoriesList(storiesList.filter((story) => story.id !== storyId));
   };
 
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('kakuma-admin-auth');
+    }
+
+    setIsAuthenticated(false);
+    setAdminEmail('');
+    setAdminPassword('');
+    setLoginError('');
+  };
+
   const toggleReviewed = (id: string) => {
     setReviewedIds((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
@@ -146,7 +214,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   });
 
   const filteredSubmissions = submissions.filter((submission) => {
-    const haystack = `${submission.fullName} ${submission.email || ''} ${submission.phone || ''} ${submission.reason || ''}`.toLowerCase();
+    const haystack = `${submission.fullName} ${submission.email || ''} ${submission.phone || ''} ${submission.reason || ''} ${submission.subject || ''}`.toLowerCase();
     return haystack.includes(searchTerm.toLowerCase());
   });
 
@@ -171,7 +239,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     },
     {
       title: 'Pending Inquiries',
-      value: `${contactSubmissions.length}`,
+      value: `${contactSubmissions.length + subscribeSubmissions.length}`,
       note: 'Partnerships & Equipment',
       noteClass: 'text-purple-600',
     },
@@ -216,9 +284,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
             <button
               type="submit"
-              className="w-full rounded-full bg-[#123764] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0c2545]"
+              disabled={isLoggingIn}
+              className="w-full rounded-full bg-[#123764] px-4 py-3 text-sm font-black text-white transition hover:bg-[#0c2545] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Sign In
+              {isLoggingIn ? 'Signing In…' : 'Sign In'}
             </button>
           </form>
 
@@ -234,13 +303,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* HEADER BANNER */}
       <section className="bg-[#071D3B] text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] relative overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
-          <button
-            onClick={onBackToHome}
-            className="inline-flex items-center gap-2 bg-[#123764] hover:bg-[#FDBD55] text-white hover:text-[#123764] px-4 py-2 rounded-full text-xs font-bold transition-all border border-[#FDBD55]/40 mb-6 shadow-md group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Exit Dashboard</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <button
+              onClick={onBackToHome}
+              className="inline-flex items-center gap-2 bg-[#123764] hover:bg-[#FDBD55] text-white hover:text-[#123764] px-4 py-2 rounded-full text-xs font-bold transition-all border border-[#FDBD55]/40 shadow-md group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>Exit Dashboard</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 bg-[#FDBD55] hover:bg-[#e0a33c] text-[#123764] px-4 py-2 rounded-full text-xs font-black transition-all border-2 border-white shadow-lg"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
 
           <div className="inline-flex items-center gap-2 bg-[#FDBD55] text-[#123764] px-3.5 py-1 rounded-full mb-3 text-xs font-black uppercase tracking-widest shadow-sm">
             <LayoutDashboard className="w-4 h-4 fill-[#123764]" />
@@ -370,7 +448,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <tbody className="divide-y divide-gray-100">
                   {filteredRegistrationRows.map((reg) => (
                     <tr key={reg.id} className="hover:bg-gray-50">
-                      <td className="p-4 font-bold text-[#123764]">{reg.name}</td>
+                      <td className="p-4 font-bold text-[#123764]">
+                        <div>{reg.name}</div>
+                        {reg.email && <div className="mt-1 text-[11px] font-semibold text-[#123764]">{reg.email}</div>}
+                      </td>
                       <td className="p-4">
                         <span className="bg-[#EDF3FA] text-[#123764] font-black px-2.5 py-0.5 rounded-full text-[11px]">
                           {reg.ageGroup}
@@ -496,7 +577,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <div key={submission.id} className="rounded-3xl border-2 border-gray-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-[#123764] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#FDBD55]">
-                        {submission.type === 'join' ? 'Join Application' : 'Contact Message'}
+                        {submission.type === 'join'
+                          ? 'Join Application'
+                          : submission.type === 'subscribe'
+                            ? 'Newsletter Subscription'
+                            : 'Contact Message'}
                       </span>
                       <span className="text-xs font-semibold text-gray-500">{submission.createdAt}</span>
                       <button
@@ -510,7 +595,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <h4 className="text-lg font-black text-[#123764]">{submission.fullName}</h4>
-                        <p className="text-sm text-gray-700">{submission.email || 'No email provided'}</p>
+                        <p className="text-sm font-semibold text-[#123764]">{submission.email || 'No email provided'}</p>
+                        <p className="text-xs text-gray-500">Email captured for the dashboard</p>
                       </div>
                       <div className="text-sm text-gray-600">
                         <p><span className="font-semibold text-[#123764]">Phone:</span> {submission.phone || 'N/A'}</p>
@@ -531,64 +617,158 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {/* FIXTURES & SCORES TAB */}
         {activeTab === 'fixtures' && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">
-              Manage Fixtures & Enter Match Scores
-            </h3>
+            <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">
+                Add New Fixture
+              </h3>
+              <p className="mt-2 text-sm text-gray-600">Submit match details from the dashboard and they will appear in the fixtures table immediately.</p>
 
-            <div className="space-y-4">
-              {fixturesList.map((fix) => (
-                <div key={fix.id} className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-black text-[#FDBD55] bg-[#123764] px-2.5 py-0.5 rounded-full uppercase">
-                      {fix.division}
-                    </span>
-                    <h4 className="font-extrabold text-[#123764] text-base mt-1">
-                      {fix.homeTeam} vs {fix.awayTeam}
-                    </h4>
-                    <p className="text-xs text-gray-500">{fix.date} • {fix.venue}</p>
-                  </div>
-
-                  {editingScoreId === fix.id ? (
-                    <div className="flex items-center gap-2 bg-[#FFF7E8] p-3 rounded-2xl border border-[#FDBD55]">
-                      <input
-                        type="number"
-                        className="w-12 p-1 text-center font-bold border rounded"
-                        value={homeScoreInput}
-                        onChange={(e) => setHomeScoreInput(parseInt(e.target.value) || 0)}
-                      />
-                      <span className="font-bold text-[#123764]">-</span>
-                      <input
-                        type="number"
-                        className="w-12 p-1 text-center font-bold border rounded"
-                        value={awayScoreInput}
-                        onChange={(e) => setAwayScoreInput(parseInt(e.target.value) || 0)}
-                      />
-                      <button
-                        onClick={() => handleUpdateScore(fix.id)}
-                        className="bg-[#123764] text-white text-xs px-3 py-1.5 rounded-full font-bold ml-2"
-                      >
-                        Save
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-lg text-[#123764]">
-                        {fix.status === 'completed' ? `${fix.homeScore} - ${fix.awayScore}` : 'Pending'}
-                      </span>
-                      <button
-                        onClick={() => {
-                          setEditingScoreId(fix.id);
-                          setHomeScoreInput(fix.homeScore || 0);
-                          setAwayScoreInput(fix.awayScore || 0);
-                        }}
-                        className="bg-[#FDBD55] text-[#123764] text-xs font-black px-3.5 py-1.5 rounded-full hover:bg-[#e0a33c]"
-                      >
-                        Edit Score
-                      </button>
-                    </div>
-                  )}
+              <form onSubmit={handleAddFixture} className="mt-5 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newFixture.date}
+                    onChange={(e) => setNewFixture({ ...newFixture, date: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                  />
                 </div>
-              ))}
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Time</label>
+                  <input
+                    type="time"
+                    value={newFixture.time}
+                    onChange={(e) => setNewFixture({ ...newFixture, time: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Home Team</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFixture.homeTeam}
+                    onChange={(e) => setNewFixture({ ...newFixture, homeTeam: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                    placeholder="Kakuma Stars"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Away Team</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFixture.awayTeam}
+                    onChange={(e) => setNewFixture({ ...newFixture, awayTeam: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                    placeholder="Kalobeyei FC"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Venue</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFixture.venue}
+                    onChange={(e) => setNewFixture({ ...newFixture, venue: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                    placeholder="Kakuma Main Pitch"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase text-[#123764]">Division</label>
+                  <select
+                    value={newFixture.division}
+                    onChange={(e) => setNewFixture({ ...newFixture, division: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
+                  >
+                    <option value="Academy League">Academy League</option>
+                    <option value="Women League">Women League</option>
+                    <option value="Community Cup">Community Cup</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2 flex justify-end">
+                  <button type="submit" className="rounded-full bg-[#123764] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#0c2545]">
+                    Submit Fixture
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="bg-white rounded-3xl overflow-hidden border-2 border-gray-200 shadow-md">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-[#071D3B] text-white">
+                  <tr>
+                    <th className="p-4">DATE</th>
+                    <th className="p-4">MATCH</th>
+                    <th className="p-4">VENUE</th>
+                    <th className="p-4">STATUS</th>
+                    <th className="p-4">RESULT</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {fixturesList.map((fix) => (
+                    <tr key={fix.id} className="hover:bg-gray-50">
+                      <td className="p-4 text-gray-700">
+                        <div className="font-bold text-[#123764]">{fix.date}</div>
+                        <div className="text-[11px] text-gray-500">{fix.time}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-black text-[#123764]">{fix.homeTeam} vs {fix.awayTeam}</div>
+                        <div className="text-[11px] text-gray-500">{fix.division}</div>
+                      </td>
+                      <td className="p-4 text-gray-700">{fix.venue}</td>
+                      <td className="p-4">
+                        <span className="rounded-full bg-[#EDF3FA] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#123764]">
+                          {fix.status}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        {editingScoreId === fix.id ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="number"
+                              className="w-12 p-1 text-center font-bold border rounded"
+                              value={homeScoreInput}
+                              onChange={(e) => setHomeScoreInput(parseInt(e.target.value) || 0)}
+                            />
+                            <span className="font-bold text-[#123764]">-</span>
+                            <input
+                              type="number"
+                              className="w-12 p-1 text-center font-bold border rounded"
+                              value={awayScoreInput}
+                              onChange={(e) => setAwayScoreInput(parseInt(e.target.value) || 0)}
+                            />
+                            <button
+                              onClick={() => handleUpdateScore(fix.id)}
+                              className="bg-[#123764] text-white text-xs px-3 py-1.5 rounded-full font-bold"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-black text-[#123764]">
+                              {fix.status === 'completed' ? `${fix.homeScore ?? 0} - ${fix.awayScore ?? 0}` : 'Pending'}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setEditingScoreId(fix.id);
+                                setHomeScoreInput(fix.homeScore || 0);
+                                setAwayScoreInput(fix.awayScore || 0);
+                              }}
+                              className="bg-[#FDBD55] text-[#123764] text-xs font-black px-3 py-1.5 rounded-full hover:bg-[#e0a33c]"
+                            >
+                              Edit Score
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

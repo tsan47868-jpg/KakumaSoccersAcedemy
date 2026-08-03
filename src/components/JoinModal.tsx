@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, User, Phone, MapPin, Calendar, Heart } from 'lucide-react';
 import { JoinFormData } from '../types';
+import { saveSubmission } from '../lib/submissions';
 
 interface JoinModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export const JoinModal: React.FC<JoinModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const submission = {
@@ -40,14 +41,7 @@ export const JoinModal: React.FC<JoinModalProps> = ({ isOpen, onClose }) => {
       createdAt: new Date().toLocaleString(),
     };
 
-    const existing = typeof window !== 'undefined' ? window.localStorage.getItem('kakuma-form-submissions') : null;
-    const submissions = existing ? JSON.parse(existing) : [];
-    submissions.unshift(submission);
-
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('kakuma-form-submissions', JSON.stringify(submissions));
-    }
-
+    await saveSubmission(submission);
     setSubmitted(true);
   };
 
