@@ -126,11 +126,11 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({
         {/* Background Overlay Graphic */}
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
           <img
-            src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1600"
+            src="/images/galleryheroimage.png"
             alt="Kakuma Football Pitch"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071D3B] via-[#071D3B]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#071D3B]/70 via-[#071D3B]/30 to-transparent" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">

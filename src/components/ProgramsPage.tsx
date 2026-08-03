@@ -122,12 +122,21 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({
     <div className="min-h-screen bg-[#FFF7E8] text-[#111827] pb-20">
       
       {/* HEADER BANNER */}
-      <section className="bg-[#071D3B] text-white pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] relative overflow-hidden">
+      <section className="relative bg-[#071D3B] text-white pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/whatwedo.png"
+            alt="Kakuma Soccer Academy programs"
+            className="h-full w-full object-cover object-center opacity-35"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071D3B]/95 via-[#071D3B]/85 to-[#071D3B]/60" />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-7xl mx-auto relative z-10"
+          className="relative z-10 max-w-7xl mx-auto"
         >
           <button
             onClick={onBackToHome}

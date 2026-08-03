@@ -8,6 +8,13 @@ export interface Program {
   iconName: string;
 }
 
+export interface TeamRosterPlayer {
+  name: string;
+  age: number;
+  position: string;
+  jersey: number;
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -16,6 +23,9 @@ export interface Team {
   playersCount: number;
   badge: string;
   achievements: string[];
+  schedule: string;
+  focus: string;
+  rosterSample: TeamRosterPlayer[];
 }
 
 export interface Fixture {

@@ -166,7 +166,7 @@ export function App() {
             {/* Hero Section */}
             <HeroSection
               onOpenJoin={() => setIsJoinOpen(true)}
-              onOpenDonate={() => setIsDonateOpen(true)}
+              onOpenDonate={() => navigateTo('donate')}
             />
 
             {/* Round Statistic Counters & Impact */}

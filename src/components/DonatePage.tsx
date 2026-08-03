@@ -49,17 +49,19 @@ export const DonatePage: React.FC<DonatePageProps> = ({
       {/* HEADER BANNER */}
       <section className="bg-[#071D3B] text-white pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] relative overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
-          <button
-            onClick={onBackToHome}
-            className="inline-flex items-center gap-2 bg-[#123764] hover:bg-[#FDBD55] text-white hover:text-[#123764] px-4 py-2.5 rounded-full text-xs font-bold transition-all border border-[#FDBD55]/40 mb-10 sm:mb-12 shadow-md group cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Return to Homepage</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5 mb-5">
+            <button
+              onClick={onBackToHome}
+              className="inline-flex items-center gap-2 bg-[#123764] hover:bg-[#FDBD55] text-white hover:text-[#123764] px-4 py-2.5 rounded-full text-xs font-bold transition-all border border-[#FDBD55]/40 shadow-md group cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>Return to Homepage</span>
+            </button>
 
-          <div className="inline-flex items-center gap-2 bg-[#FDBD55] text-[#123764] px-3.5 py-1.5 rounded-full mb-5 text-xs font-black uppercase tracking-widest shadow-sm">
-            <Heart className="w-4 h-4 fill-[#123764]" />
-            <span>DIRECT COMMUNITY SUPPORT</span>
+            <div className="inline-flex items-center gap-2 bg-[#FDBD55] text-[#123764] px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
+              <Heart className="w-4 h-4 fill-[#123764]" />
+              <span>DIRECT COMMUNITY SUPPORT</span>
+            </div>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-serif text-white tracking-tight leading-tight uppercase">

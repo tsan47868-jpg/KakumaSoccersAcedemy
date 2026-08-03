@@ -28,9 +28,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Full-width Cover Background Image with Warm Sunset & Navy Vignette */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=2000"
-            alt="Kakuma Soccer Academy Sunset Pitch"
-            className="w-full h-full object-cover object-[68%_center] sm:object-center filter brightness-90 contrast-105 scale-100 sm:scale-105 transition-transform duration-1000"
+            src="/images/whatwedo.png"
+            alt="Kakuma Soccer Academy: What We Do"
+            className="w-full h-full object-cover object-center filter brightness-90 contrast-105 scale-100 sm:scale-105 transition-transform duration-1000"
           />
           {/* Multi-stage Responsive Overlay Gradient for Perfect Text Legibility across Mobile & Desktop */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#071D3B]/90 via-[#071D3B]/80 to-[#071D3B] sm:bg-gradient-to-r sm:from-[#071D3B]/95 sm:via-[#071D3B]/80 sm:to-[#071D3B]/30" />

@@ -22,7 +22,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "When young people step onto the pitch, they do not only play football. They discover confidence, friendship and hope.",
     author: "Peter Lokai",
     role: "Head Coach & Founder",
-    imageUrl: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute1.jpg",
     tag: "Kakuma Pitch Sunset"
   },
   {
@@ -30,7 +30,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Football taught me that no matter where you come from, on this pitch we are all equals with a shared dream.",
     author: "Amina Hassan",
     role: "Girls U17 Captain",
-    imageUrl: "https://images.unsplash.com/photo-1511886929837-354d827aae26?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute2.jpg",
     tag: "Academy Goalkeeper"
   },
   {
@@ -38,7 +38,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Every pass is a promise, every match is a lesson in resilience, and every goal is celebrated by our whole community.",
     author: "David Deng",
     role: "U14 Playmaker",
-    imageUrl: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute3.jpg",
     tag: "Matchday Celebration"
   },
   {
@@ -46,7 +46,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Education and football go hand in hand. In Kakuma, the ball opens the door to the classroom.",
     author: "Hassan Ali",
     role: "Education Coordinator",
-    imageUrl: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute4.jpg",
     tag: "Community Pitch"
   },
   {
@@ -54,7 +54,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "When girls play sports, barriers break down. We gain leadership skills that last long after the final whistle.",
     author: "Grace Nyabol",
     role: "Mentorship Lead",
-    imageUrl: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute5.jpg",
     tag: "Team Circle"
   },
   {
@@ -62,7 +62,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Football gives us focus and discipline. It keeps our mind clear and our hearts full of passion.",
     author: "Samuel Otim",
     role: "U17 Goalkeeper",
-    imageUrl: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute6.jpg",
     tag: "Training Drills"
   },
   {
@@ -70,7 +70,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Through football, youth from 10 different nations in Kakuma learn to speak one single language: unity.",
     author: "Emmanuel Lado",
     role: "Youth Representative",
-    imageUrl: "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute7.jpg",
     tag: "Peace Tournament"
   },
   {
@@ -78,7 +78,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Putting on the Kakuma FA jersey fills me with pride. I play for my family and for every young dreamer here.",
     author: "Joseph Konyi",
     role: "Forward, U17 Squad",
-    imageUrl: "https://images.unsplash.com/photo-1560272564-669520514220?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute8.jpg",
     tag: "Jersey Pride"
   },
   {
@@ -86,7 +86,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Sports teach us dignity in victory and grace in defeat. It builds true leaders for tomorrow.",
     author: "Mary Akol",
     role: "Youth Mentor",
-    imageUrl: "https://images.unsplash.com/photo-1543351611-58f69d7c1781?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute9.jpg",
     tag: "Mentorship Circle"
   },
   {
@@ -94,7 +94,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Our boots may be worn, our pitch may be dust, but our spirit on match day is unbreakable.",
     author: "Gatluak Ruai",
     role: "U12 Winger",
-    imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute10.jpg",
     tag: "Dust Pitch Glory"
   },
   {
@@ -102,7 +102,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Coaching these young athletes is the greatest honor of my life. Their energy inspires all of Turkana West.",
     author: "Coach John Mwangi",
     role: "Tactical Coach",
-    imageUrl: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute11.jpg",
     tag: "Coach Guidance"
   },
   {
@@ -110,7 +110,7 @@ export const HERO_QUOTES: QuoteSlide[] = [
     quote: "Behind every youth player is a community of mothers, elders, and friends cheering them on with joy.",
     author: "Florence Lopidia",
     role: "Fan Club Coordinator",
-    imageUrl: "https://images.unsplash.com/photo-1577223625816-7546f13df25d?auto=format&fit=crop&q=80&w=1200",
+    imageUrl: "/images/qoute12.jpg",
     tag: "Community Fans"
   }
 ];

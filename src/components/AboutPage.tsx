@@ -90,8 +90,17 @@ export const AboutPage: React.FC<AboutPageProps> = ({
     <div className="min-h-screen bg-[#FFF7E8] text-[#111827] pb-20">
       
       {/* PAGE HERO HEADER */}
-      <section className="bg-[#071D3B] text-white pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] relative overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10">
+      <section
+        className="bg-[#071D3B] text-white pt-10 sm:pt-14 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FDBD55] relative overflow-hidden min-h-[520px]"
+        style={{
+          backgroundImage: "url('/images/aboutusheroimage.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="absolute inset-0 bg-[#071D3B]/85" />
+        <div className="relative max-w-7xl mx-auto relative z-10">
           <button
             onClick={onBackToHome}
             className="inline-flex items-center gap-2 bg-[#123764] hover:bg-[#FDBD55] text-white hover:text-[#123764] px-4 py-2.5 rounded-full text-xs font-bold transition-all border border-[#FDBD55]/40 mb-10 sm:mb-12 shadow-md group cursor-pointer"
@@ -105,27 +114,29 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             <span>Refugee-Led Community Initiative</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-serif text-white tracking-tight leading-tight uppercase mb-6">
-            BORN IN KAKUMA. BUILT FOR THE FUTURE.
-          </h1>
-          <p className="mt-4 text-sm sm:text-lg text-white/80 max-w-3xl leading-relaxed mb-8">
-            Kakuma Soccer Academy was established in November 2024 to identify, nurture and expose young football talent while promoting unity, education, mentorship, discipline and peaceful coexistence in Kakuma Refugee Camp and Turkana West.
-          </p>
+          <div>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-serif text-white tracking-tight leading-tight uppercase mb-6">
+              BORN IN KAKUMA. BUILT FOR THE FUTURE.
+            </h1>
+            <p className="mt-4 text-sm sm:text-lg text-white/80 max-w-3xl leading-relaxed mb-8">
+              Kakuma Soccer Academy was established in November 2024 to identify, nurture and expose young football talent while promoting unity, education, mentorship, discipline and peaceful coexistence in Kakuma Refugee Camp and Turkana West.
+            </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <button
-              onClick={onOpenJoin}
-              className="bg-[#FDBD55] hover:bg-[#e0a33c] text-[#123764] font-black text-xs sm:text-sm px-6 py-3 rounded-full shadow-lg transition-all"
-            >
-              Join Our Academy
-            </button>
-            <button
-              onClick={onOpenDonate}
-              className="bg-[#123764] hover:bg-[#0c2545] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-full border border-white/20 hover:border-[#FDBD55] transition-all flex items-center gap-2"
-            >
-              <Heart className="w-4 h-4 text-[#FDBD55]" />
-              <span>Support Our Mission</span>
-            </button>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <button
+                onClick={onOpenJoin}
+                className="bg-[#FDBD55] hover:bg-[#e0a33c] text-[#123764] font-black text-xs sm:text-sm px-6 py-3 rounded-full shadow-lg transition-all"
+              >
+                Join Our Academy
+              </button>
+              <button
+                onClick={() => onOpenDonate()}
+                className="bg-[#123764] hover:bg-[#0c2545] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-full border border-white/20 hover:border-[#FDBD55] transition-all flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4 text-[#FDBD55]" />
+                <span>Support Our Mission</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>

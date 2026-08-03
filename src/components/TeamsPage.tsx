@@ -32,7 +32,7 @@ export const TeamsPage: React.FC<TeamsPageProps> = ({
 
   const categories = ['All', 'U10', 'U12', 'U14', 'U17', 'Girls', 'Community'];
 
-  const allTeams: (Team & { schedule: string; focus: string; rosterSample: any[] })[] = [
+  const allTeams: Team[] = [
     {
       id: 't-u10',
       name: 'Kakuma Cubs U10',

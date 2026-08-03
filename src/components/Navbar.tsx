@@ -34,20 +34,30 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
 
-  const handleNavClick = (id: string) => {
-    setActiveSection(id);
+  const scrollToElement = (elementId: string) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleNavClick = (id: string, sectionId?: string) => {
     setIsMobileMenuOpen(false);
-    if (id === 'gallery') {
+    const targetId = sectionId || id;
+
+    if (id === 'home') {
+      setActiveSection('home');
+      setTimeout(() => scrollToElement(targetId), 100);
+      return;
+    }
+
+    setActiveSection(id);
+    if (targetId === 'gallery') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      }, 50);
+      setTimeout(() => scrollToElement(targetId), 50);
     }
   };
 
@@ -227,7 +237,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="absolute left-0 top-full pt-2 w-60 hidden group-hover:block animate-fadeIn z-50">
                 <div className="bg-[#071D3B] border-2 border-[#FDBD55] rounded-2xl shadow-2xl p-2 text-xs text-white space-y-1 backdrop-blur-xl">
                   <button
-                    onClick={() => handleNavClick('impact')}
+                    onClick={() => handleNavClick('home', 'impact')}
                     className="w-full text-left p-2.5 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2.5"
                   >
                     <Award className="w-4 h-4 text-[#FDBD55]" />
@@ -237,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </button>
                   <button
-                    onClick={() => handleNavClick('impact')}
+                    onClick={() => handleNavClick('home', 'impact')}
                     className="w-full text-left p-2.5 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2.5"
                   >
                     <Users className="w-4 h-4 text-[#FDBD55]" />
@@ -247,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </button>
                   <button
-                    onClick={() => handleNavClick('league')}
+                    onClick={() => handleNavClick('home', 'league')}
                     className="w-full text-left p-2.5 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2.5"
                   >
                     <Trophy className="w-4 h-4 text-[#FDBD55]" />
