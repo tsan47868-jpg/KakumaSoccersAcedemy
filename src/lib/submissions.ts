@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { addDoc, collection, getDocs, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface SubmissionPayload {
@@ -15,6 +15,11 @@ interface SubmissionPayload {
   message?: string;
   notes?: string;
   createdAt?: string;
+  gender?: string;
+  position?: string;
+  amount?: number;
+  tierId?: string;
+  paymentMethod?: string;
 }
 
 const readLocalSubmissions = () => {
@@ -42,6 +47,13 @@ export const saveSubmission = async (submission: SubmissionPayload) => {
     createdAt: submission.createdAt || new Date().toLocaleString(),
   };
 
+  if (!db) {
+    const stored = readLocalSubmissions();
+    stored.unshift(payload);
+    writeLocalSubmissions(stored);
+    return false;
+  }
+
   try {
     await addDoc(collection(db, 'submissions'), payload);
     return true;
@@ -56,6 +68,10 @@ export const saveSubmission = async (submission: SubmissionPayload) => {
 };
 
 export const loadSubmissions = async () => {
+  if (!db) {
+    return readLocalSubmissions();
+  }
+
   try {
     const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
@@ -69,4 +85,27 @@ export const loadSubmissions = async () => {
   }
 
   return readLocalSubmissions();
+};
+
+export const subscribeToSubmissions = (callback: (submissions: SubmissionPayload[]) => void) => {
+  if (!db) {
+    callback(readLocalSubmissions());
+    return () => undefined;
+  }
+
+  const q = query(collection(db, 'submissions'), orderBy('createdAt', 'desc'));
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const fromFirestore = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      callback(fromFirestore.length > 0 ? fromFirestore : readLocalSubmissions());
+    },
+    (error) => {
+      console.error('Failed to subscribe to submissions from Firestore', error);
+      callback(readLocalSubmissions());
+    }
+  );
+
+  return unsubscribe;
 };

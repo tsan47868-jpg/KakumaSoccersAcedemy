@@ -74,51 +74,48 @@ export const AboutSection: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="flex justify-center mb-10 overflow-x-auto pb-2"
+          className="flex justify-center mb-10"
         >
-          <div className="inline-flex bg-[#EDF3FA] p-1.5 rounded-full border border-[#123764]/20 shadow-inner">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 bg-[#EDF3FA] p-1.5 rounded-full border border-[#123764]/20 shadow-inner max-w-full overflow-hidden">
             {[
-              { id: 'mission', label: '01. Our Mission & Vision' },
-              { id: 'history', label: '02. Kakuma Context' },
-              { id: 'pillars', label: '03. Four Core Pillars' },
-              { id: 'governance', label: '04. CBO Leadership' },
+              { id: 'mission', label: 'Mission' },
+              { id: 'history', label: 'Context' },
+              { id: 'pillars', label: 'Pillars' },
+              { id: 'governance', label: 'Leadership' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                className={`px-3 sm:px-4 lg:px-5 py-2 rounded-full text-[10px] sm:text-xs lg:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[#123764] text-white shadow-md'
                     : 'text-[#123764] hover:text-[#123764]/80'
                 }`}
               >
-                <span className="text-[#FDBD55] mr-1.5">
-                  {tab.label.split('.')[0]}.
-                </span>
-                {tab.label.split('.')[1]}
+                {tab.label}
               </button>
             ))}
           </div>
         </motion.div>
 
         {/* Tab Content Panels */}
-        <div className="bg-[#FFF7E8] rounded-3xl p-6 sm:p-10 border-2 border-[#FDBD55] shadow-lg">
+        <div className="bg-[#FFF7E8] rounded-3xl p-4 sm:p-6 lg:p-10 border-2 border-[#FDBD55] shadow-lg">
           
           {activeTab === 'mission' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 flex flex-col gap-4">
-                <span className="text-xs font-black text-[#FDBD55] bg-[#123764] px-3 py-1 rounded-full w-fit">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-center">
+              <div className="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
+                <span className="text-[10px] sm:text-xs font-black text-[#FDBD55] bg-[#123764] px-3 py-1 rounded-full w-fit">
                   SECTION 01 • MISSION
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#123764] font-serif">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#123764] font-serif">
                   Empowering Young Minds, Nurturing Lifelong Dreams
                 </h3>
                 <p className="text-sm sm:text-base text-[#111827] leading-relaxed">
                   Our mission is to leverage the universal power of football to provide young refugees and local youth in Kakuma with safe spaces, structured sports training, academic tutoring, and life skills guidance.
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                  <div className="flex items-start gap-3 bg-white p-4 rounded-2xl border border-[#FDBD55]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4 mt-1 sm:mt-2">
+                  <div className="flex items-start gap-3 bg-white p-2.5 sm:p-3 lg:p-4 rounded-2xl border border-[#FDBD55]">
                     <CheckCircle2 className="w-5 h-5 text-[#FDBD55] shrink-0 mt-0.5" />
                     <div>
                       <h4 className="font-bold text-[#123764] text-sm">Inclusive Opportunity</h4>
@@ -126,7 +123,7 @@ export const AboutSection: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 bg-white p-4 rounded-2xl border border-[#FDBD55]">
+                  <div className="flex items-start gap-3 bg-white p-2.5 sm:p-3 lg:p-4 rounded-2xl border border-[#FDBD55]">
                     <CheckCircle2 className="w-5 h-5 text-[#FDBD55] shrink-0 mt-0.5" />
                     <div>
                       <h4 className="font-bold text-[#123764] text-sm">Dual Focus Paradigm</h4>
@@ -135,7 +132,7 @@ export const AboutSection: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-[#123764] text-white rounded-2xl border-l-4 border-[#FDBD55]">
+                <div className="mt-2 sm:mt-4 p-3 sm:p-4 bg-[#123764] text-white rounded-2xl border-l-4 border-[#FDBD55]">
                   <p className="text-xs sm:text-sm font-semibold italic text-[#FDBD55]">
                     “More Than Football — Nurturing Dreams and Building Futures.”
                   </p>
@@ -144,7 +141,7 @@ export const AboutSection: React.FC = () => {
 
               {/* Circular Image Frame with Gold Ring */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full border-8 border-[#FDBD55] bg-white p-2 shadow-xl">
+                <div className="relative w-40 h-40 sm:w-56 sm:h-56 lg:w-80 lg:h-80 rounded-full border-6 sm:border-8 border-[#FDBD55] bg-white p-2 shadow-xl">
                   <img
                     src="https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&q=80&w=600"
                     alt="Kakuma Football Academy Mentorship Group"
@@ -159,12 +156,12 @@ export const AboutSection: React.FC = () => {
           )}
 
           {activeTab === 'history' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 flex flex-col gap-4">
-                <span className="text-xs font-black text-[#FDBD55] bg-[#123764] px-3 py-1 rounded-full w-fit">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-center">
+              <div className="lg:col-span-7 flex flex-col gap-3 sm:gap-4">
+                <span className="text-[10px] sm:text-xs font-black text-[#FDBD55] bg-[#123764] px-3 py-1 rounded-full w-fit">
                   SECTION 02 • CONTEXT & ORIGIN
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#123764] font-serif">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#123764] font-serif">
                   Serving Kakuma & Turkana West
                 </h3>
                 <p className="text-sm sm:text-base text-[#111827] leading-relaxed">
@@ -176,7 +173,7 @@ export const AboutSection: React.FC = () => {
               </div>
 
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full border-8 border-[#123764] bg-[#FDBD55] p-2 shadow-xl">
+                <div className="relative w-40 h-40 sm:w-56 sm:h-56 lg:w-80 lg:h-80 rounded-full border-6 sm:border-8 border-[#123764] bg-[#FDBD55] p-2 shadow-xl">
                   <img
                     src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600"
                     alt="Kakuma Pitch Action"

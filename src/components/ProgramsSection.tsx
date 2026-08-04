@@ -55,7 +55,7 @@ export const ProgramsSection: React.FC<ProgramsSectionProps> = ({ onOpenJoin }) 
         </motion.div>
 
         {/* Programs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {PROGRAMS_DATA.map((prog, index) => (
             <motion.div
               key={prog.id}

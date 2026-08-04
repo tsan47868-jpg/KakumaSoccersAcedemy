@@ -83,7 +83,7 @@ export const StatsSection: React.FC = () => {
         </motion.div>
 
         {/* Round Statistic Counters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
           {stats.map((stat, idx) => {
             const Icon = stat.icon;
             return (
@@ -97,13 +97,13 @@ export const StatsSection: React.FC = () => {
                 className="flex flex-col items-center text-center group cursor-default"
               >
                 {/* Outer Gold Ring Circle */}
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[#0c2545] border-4 border-[#FDBD55] flex flex-col items-center justify-center p-3 shadow-xl transform group-hover:scale-110 transition-transform duration-300 relative">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-[#0c2545] border-4 border-[#FDBD55] flex flex-col items-center justify-center p-3 shadow-xl transform group-hover:scale-110 transition-transform duration-300 relative">
                   
                   {/* Subtle Icon Background */}
                   <Icon className="w-6 h-6 text-[#FDBD55] mb-1" />
                   
                   {/* Large Gold Number */}
-                  <span className="text-2xl sm:text-3xl font-black text-[#FDBD55] tracking-tight font-serif">
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-black text-[#FDBD55] tracking-tight font-serif">
                     <CountUp value={stat.number} />
                   </span>
 
@@ -112,10 +112,10 @@ export const StatsSection: React.FC = () => {
                 </div>
 
                 {/* Label & Sublabel */}
-                <h3 className="mt-4 text-base font-bold text-white group-hover:text-[#FDBD55] transition-colors">
+                <h3 className="mt-3 sm:mt-4 text-sm sm:text-base font-bold text-white group-hover:text-[#FDBD55] transition-colors">
                   {stat.label}
                 </h3>
-                <p className="mt-1 text-xs text-white/70 max-w-[180px]">
+                <p className="mt-1 text-[11px] sm:text-xs text-white/70 max-w-[180px]">
                   {stat.sublabel}
                 </p>
               </motion.div>

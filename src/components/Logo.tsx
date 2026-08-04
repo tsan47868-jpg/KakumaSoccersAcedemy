@@ -17,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   return (
     <div
-      className={`inline-flex flex-col items-center justify-center select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`hidden lg:inline-flex flex-col items-center justify-center select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
       style={{ width: size, height: showSlogan ? size + size * 0.22 : size }}
     >

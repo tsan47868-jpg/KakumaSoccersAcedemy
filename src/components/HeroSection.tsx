@@ -101,7 +101,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* Right Column: Prominent Circular Badge Emblem Overlay */}
-            <div className="lg:col-span-5 flex items-center justify-center lg:justify-end mt-4 lg:mt-0">
+            <div className="hidden lg:flex lg:col-span-5 items-center justify-center lg:justify-end">
               <div className="relative transform hover:scale-105 transition-transform duration-500 drop-shadow-2xl">
                 {/* Large Official Logo Badge */}
                 <div className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 flex items-center justify-center">

@@ -1,0 +1,28 @@
+// Firestore security rules for Kakuma Soccer Academy.
+//
+// Apply with:  firebase deploy --only firestore:rules
+// (Review your existing rules first — this deploy REPLACES the entire ruleset.)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Website visitors submit forms (contact, subscribe, register, donate)
+    // anonymously. Allow anyone to create, but only signed-in admins can read.
+    match /submissions/{doc} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Admin accounts (if you later want role-based checks).
+    // With the current "any Firebase user is an admin" model, only reads
+    // are needed and they require a signed-in user.
+    match /admins/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Default: deny everything else unless explicitly opened above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

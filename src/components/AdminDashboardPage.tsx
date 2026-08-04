@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { loadSubmissions } from '../lib/submissions';
-import { verifyAdminCredentials } from '../lib/admin';
+import { subscribeToSubmissions } from '../lib/submissions';
+import { signInAdmin, signOutAdmin, onAdminAuthStateChanged } from '../lib/admin';
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -26,7 +26,7 @@ interface AdminDashboardPageProps {
   onBackToHome: () => void;
 }
 
-type AdminTab = 'overview' | 'registrations' | 'fixtures' | 'stories' | 'messages';
+type AdminTab = 'overview' | 'registrations' | 'fixtures' | 'stories' | 'messages' | 'donations';
 
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onBackToHome,
@@ -42,7 +42,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [submissions, setSubmissions] = useState<any[]>([]);
-  const [storiesList, setStoriesList] = useState(NEWS_ARTICLES);
+  const [storiesList, setStoriesList] = useState<any[]>(NEWS_ARTICLES);
   const [newStory, setNewStory] = useState({ title: '', summary: '', category: 'Community' });
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
@@ -55,57 +55,65 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     division: 'Academy League',
   });
 
-  const sampleRegistrations = [
+const sampleRegistrations: Array<{ id: string; name: string; age: number | string; ageGroup: string; guardian: string; phone: string; zone: string; date: string; email?: string }> = [
     { id: 'reg-1', name: 'Joseph Deng', age: 16, ageGroup: 'U17', guardian: 'Mary Achan', phone: '+254 712 345 678', zone: 'Kakuma 1', date: 'Aug 1, 2026' },
     { id: 'reg-2', name: 'Amina Mohamed', age: 15, ageGroup: 'Girls', guardian: 'Fatima Z.', phone: '+254 723 456 789', zone: 'Kalobeyei', date: 'Jul 28, 2026' },
     { id: 'reg-3', name: 'Samuel Lual', age: 14, ageGroup: 'U15', guardian: 'Peter L.', phone: '+254 734 567 890', zone: 'Kakuma 2', date: 'Jul 25, 2026' },
   ];
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const unsubscribeAuth = onAdminAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
 
-    const savedAuth = window.localStorage.getItem('kakuma-admin-auth');
-    if (savedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-
-    const hydrateSubmissions = async () => {
-      const storedSubmissions = await loadSubmissions();
-      setSubmissions(storedSubmissions || []);
-    };
-
-    const storedFixtures = window.localStorage.getItem('kakuma-fixtures');
-    if (storedFixtures) {
-      try {
-        setFixturesList(JSON.parse(storedFixtures));
-      } catch {
-        setFixturesList(FIXTURES_DATA);
+    if (typeof window !== 'undefined') {
+      const storedFixtures = window.localStorage.getItem('kakuma-fixtures');
+      if (storedFixtures) {
+        try {
+          setFixturesList(JSON.parse(storedFixtures));
+        } catch {
+          setFixturesList(FIXTURES_DATA);
+        }
       }
     }
 
-    hydrateSubmissions();
+    return () => {
+      unsubscribeAuth();
+    };
   }, []);
+
+  // Subscribe to submissions only once authenticated so the Firestore rules
+  // (which require a signed-in user to read) are satisfied.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSubmissions([]);
+      return;
+    }
+
+    const unsubscribeSubmissions = subscribeToSubmissions((nextSubmissions) => {
+      setSubmissions(nextSubmissions || []);
+    });
+
+    return () => {
+      unsubscribeSubmissions();
+    };
+  }, [isAuthenticated]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!adminEmail || !adminPassword) return;
     setIsLoggingIn(true);
     setLoginError('');
 
     try {
-      const isValid = await verifyAdminCredentials(adminEmail, adminPassword);
+      const result = await signInAdmin(adminEmail, adminPassword);
 
-      if (isValid) {
-        setIsAuthenticated(true);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('kakuma-admin-auth', 'true');
-        }
-        return;
+      if (result.ok) {
+        setAdminEmail('');
+        setAdminPassword('');
+      } else {
+        setLoginError(result.error || 'Incorrect admin email or password.');
       }
-
-      setLoginError('Incorrect admin email or password.');
-    } catch (error) {
-      console.error('Admin login failed', error);
-      setLoginError('Unable to reach the admin service right now. Please try again.');
     } finally {
       setIsLoggingIn(false);
     }
@@ -158,6 +166,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const joinSubmissions = submissions.filter((submission) => submission.type === 'join');
   const contactSubmissions = submissions.filter((submission) => submission.type === 'contact');
   const subscribeSubmissions = submissions.filter((submission) => submission.type === 'subscribe');
+  const donationSubmissions = submissions.filter((submission) => submission.type === 'donation');
   const registrationRows = joinSubmissions.length > 0
     ? joinSubmissions.map((submission) => ({
         id: submission.id,
@@ -168,6 +177,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         phone: submission.phone || 'N/A',
         zone: submission.location || 'N/A',
         date: submission.createdAt || 'Pending',
+        email: submission.email || undefined,
       }))
     : sampleRegistrations;
 
@@ -191,11 +201,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     setStoriesList(storiesList.filter((story) => story.id !== storyId));
   };
 
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('kakuma-admin-auth');
-    }
-
+  const handleLogout = async () => {
+    await signOutAdmin();
     setIsAuthenticated(false);
     setAdminEmail('');
     setAdminPassword('');
@@ -214,6 +221,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   });
 
   const filteredSubmissions = submissions.filter((submission) => {
+    if (submission.type !== 'contact' && submission.type !== 'subscribe') {
+      return false;
+    }
     const haystack = `${submission.fullName} ${submission.email || ''} ${submission.phone || ''} ${submission.reason || ''} ${submission.subject || ''}`.toLowerCase();
     return haystack.includes(searchTerm.toLowerCase());
   });
@@ -243,6 +253,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       note: 'Partnerships & Equipment',
       noteClass: 'text-purple-600',
     },
+    {
+      title: 'Donation Pledges',
+      value: `${donationSubmissions.length}`,
+      note: 'Community Support & Contributions',
+      noteClass: 'text-emerald-600',
+    },
   ];
 
   if (!isAuthenticated) {
@@ -265,7 +281,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
                 className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
-                placeholder="admin@kakuma.org"
+                placeholder="you@example.com"
               />
             </div>
 
@@ -276,7 +292,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#123764] focus:outline-none"
-                placeholder="kakuma2026"
+                placeholder="••••••••"
               />
             </div>
 
@@ -291,7 +307,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </button>
           </form>
 
-          <p className="mt-4 text-xs text-gray-500">Default credentials: admin@kakuma.org / kakuma2026</p>
+          <p className="mt-4 text-xs text-gray-500">Sign in with your existing Firebase account. No local accounts are stored.</p>
         </div>
       </div>
     );
@@ -338,9 +354,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               { key: 'overview', label: 'Overview' },
               { key: 'registrations', label: 'Player Registrations' },
               { key: 'fixtures', label: 'Fixtures & Scores' },
-              { key: 'stories', label: 'News Stories' },
-              { key: 'messages', label: 'Messages & Emails' },
-            ].map((tab) => (
+               { key: 'stories', label: 'News Stories' },
+               { key: 'messages', label: 'Messages & Emails' },
+               { key: 'donations', label: 'Donations' },
+             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
@@ -392,6 +409,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <button onClick={() => setActiveTab('registrations')} className="rounded-full bg-[#FDBD55] px-4 py-2 text-sm font-black text-[#123764]">Review Registrations</button>
                   <button onClick={() => setActiveTab('messages')} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">Check Messages</button>
                   <button onClick={() => setActiveTab('stories')} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">Publish Story</button>
+                  <button onClick={() => setActiveTab('donations')} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white">Review Donations</button>
                 </div>
               </div>
 
@@ -596,7 +614,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       <div>
                         <h4 className="text-lg font-black text-[#123764]">{submission.fullName}</h4>
                         <p className="text-sm font-semibold text-[#123764]">{submission.email || 'No email provided'}</p>
-                        <p className="text-xs text-gray-500">Email captured for the dashboard</p>
+                        <p className="text-xs text-gray-500">{submission.subject || submission.reason || ''}</p>
                       </div>
                       <div className="text-sm text-gray-600">
                         <p><span className="font-semibold text-[#123764]">Phone:</span> {submission.phone || 'N/A'}</p>
@@ -614,8 +632,72 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           </div>
         )}
 
-        {/* FIXTURES & SCORES TAB */}
-        {activeTab === 'fixtures' && (
+         {/* DONATIONS TAB */}
+         {activeTab === 'donations' && (
+           <div className="space-y-6">
+             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+               <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">
+                 Donation Pledges & Contributions
+               </h3>
+               <label className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600 shadow-sm">
+                 <Search className="w-3.5 h-3.5 text-[#123764]" />
+                 <input
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   placeholder="Search donor"
+                   className="w-28 bg-transparent outline-none"
+                 />
+               </label>
+             </div>
+
+             {donationSubmissions.length === 0 ? (
+               <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
+                 No donation pledges recorded yet. Contributions made from the website will appear here automatically.
+               </div>
+             ) : (
+               <div className="bg-white rounded-3xl overflow-hidden border-2 border-gray-200 shadow-md">
+                 <table className="w-full text-left text-xs sm:text-sm">
+                   <thead className="bg-[#071D3B] text-white">
+                     <tr>
+                       <th className="p-4">DONOR</th>
+                       <th className="p-4">EMAIL</th>
+                       <th className="p-4">PHONE</th>
+                       <th className="p-4">AMOUNT</th>
+                       <th className="p-4">TIER</th>
+                       <th className="p-4">METHOD</th>
+                       <th className="p-4">DATE</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-gray-100">
+                     {donationSubmissions
+                       .filter((submission) => {
+                         const haystack = `${submission.fullName} ${submission.email || ''} ${submission.phone || ''}`.toLowerCase();
+                         return haystack.includes(searchTerm.toLowerCase());
+                       })
+                       .map((submission) => (
+                         <tr key={submission.id} className="hover:bg-gray-50">
+                           <td className="p-4 font-bold text-[#123764]">{submission.fullName}</td>
+                           <td className="p-4 text-gray-700">{submission.email || 'N/A'}</td>
+                           <td className="p-4 text-gray-700 font-mono">{submission.phone || 'N/A'}</td>
+                           <td className="p-4 font-black text-[#123764]">${submission.amount ?? '—'}</td>
+                           <td className="p-4 text-gray-700 text-xs">{submission.tierId}</td>
+                           <td className="p-4">
+                             <span className="rounded-full bg-[#EDF3FA] text-[#123764] font-black px-2.5 py-0.5 text-[11px]">
+                               {submission.paymentMethod || submission.reason || '—'}
+                             </span>
+                           </td>
+                           <td className="p-4 text-gray-400">{submission.createdAt || 'Pending'}</td>
+                         </tr>
+                       ))}
+                   </tbody>
+                 </table>
+               </div>
+             )}
+           </div>
+         )}
+
+         {/* FIXTURES & SCORES TAB */}
+         {activeTab === 'fixtures' && (
           <div className="space-y-6">
             <div className="rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-2xl font-black font-serif text-[#123764] uppercase">

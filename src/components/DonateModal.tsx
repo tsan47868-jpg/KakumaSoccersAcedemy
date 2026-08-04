@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Check, CreditCard, Smartphone, Globe, ShieldCheck } from 'lucide-react';
 import { SPONSOR_TIERS } from '../data/mockData';
+import { saveSubmission } from '../lib/submissions';
 
 interface DonateModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ export const DonateModal: React.FC<DonateModalProps> = ({ isOpen, onClose }) => 
   const [customAmount, setCustomAmount] = useState<number>(50);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'card' | 'bank'>('mpesa');
   const [step, setStep] = useState<'select' | 'payment' | 'success'>('select');
+  const [donorName, setDonorName] = useState('');
+  const [donorEmail, setDonorEmail] = useState('');
+  const [donorPhone, setDonorPhone] = useState('');
 
   if (!isOpen) return null;
 
@@ -22,13 +26,32 @@ export const DonateModal: React.FC<DonateModalProps> = ({ isOpen, onClose }) => 
     setStep('payment');
   };
 
-  const handleFinish = (e: React.FormEvent) => {
+  const handleFinish = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    await saveSubmission({
+      id: `donation-${Date.now()}`,
+      type: 'donation' as const,
+      fullName: donorName || 'Anonymous Supporter',
+      email: donorEmail || undefined,
+      phone: donorPhone || undefined,
+      reason: paymentMethod,
+      subject: `${currentTierObj.title} Contribution`,
+      message: `Pledged $${customAmount} via ${paymentMethod} for ${currentTierObj.title}. Impact: ${currentTierObj.impactText}`,
+      amount: customAmount,
+      tierId: selectedTier,
+      paymentMethod,
+      createdAt: new Date().toLocaleString(),
+    });
+
     setStep('success');
   };
 
   const handleClose = () => {
     setStep('select');
+    setDonorName('');
+    setDonorEmail('');
+    setDonorPhone('');
     onClose();
   };
 
@@ -172,6 +195,46 @@ export const DonateModal: React.FC<DonateModalProps> = ({ isOpen, onClose }) => 
                 <h4 className="font-extrabold text-[#123764] text-base">{currentTierObj.title}</h4>
               </div>
               <span className="text-2xl font-black text-[#123764] font-serif">${currentTierObj.amount}</span>
+            </div>
+
+            {/* Donor Contact Information */}
+            <div>
+              <h4 className="text-xs font-black text-[#123764] uppercase tracking-wider mb-3">
+                01. Donor Contact Information
+              </h4>
+              <p className="text-xs text-gray-500 mb-3">So we can send your receipt and a thank-you note.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#123764] uppercase mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={donorName}
+                    onChange={(e) => setDonorName(e.target.value)}
+                    placeholder="e.g. Grace Nyabol"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#123764] focus:outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#123764] uppercase mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={donorEmail}
+                    onChange={(e) => setDonorEmail(e.target.value)}
+                    placeholder="e.g. grace@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#123764] focus:outline-none text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-[#123764] uppercase mb-1">Phone (WhatsApp / Call)</label>
+                  <input
+                    type="tel"
+                    value={donorPhone}
+                    onChange={(e) => setDonorPhone(e.target.value)}
+                    placeholder="e.g. +254 7XX XXX XXX"
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-[#123764] focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <div>

@@ -13,6 +13,7 @@ import {
   Globe,
   Sparkles,
 } from 'lucide-react';
+import { saveSubmission } from '../lib/submissions';
 
 interface ContactFormData {
   fullName: string;
@@ -82,24 +83,34 @@ export const ContactSection: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
 
-    // Simulate API request response delay
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setFormData({
-        fullName: '',
-        email: '',
-        category: 'General Inquiry',
-        subject: '',
-        message: '',
-      });
-    }, 1200);
+    const submission = {
+      id: `contact-${Date.now()}`,
+      type: 'contact' as const,
+      fullName: formData.fullName,
+      email: formData.email,
+      phone: '',
+      reason: formData.category,
+      subject: formData.subject,
+      message: formData.message,
+      createdAt: new Date().toLocaleString(),
+    };
+
+    await saveSubmission(submission);
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    setFormData({
+      fullName: '',
+      email: '',
+      category: 'General Inquiry',
+      subject: '',
+      message: '',
+    });
   };
 
   return (

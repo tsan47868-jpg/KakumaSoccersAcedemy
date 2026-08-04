@@ -1,47 +1,53 @@
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, type User, type AuthError } from 'firebase/auth';
+import { auth } from '../firebase';
 
-const DEFAULT_ADMIN = {
-  email: 'admin@kakuma.org',
-  password: 'kakuma2026',
-};
+export const signInAdmin = async (email: string, password: string) => {
+  const normalizedEmail = email.trim();
 
-export const verifyAdminCredentials = async (email: string, password: string) => {
-  const normalizedEmail = email.trim().toLowerCase();
+  if (!auth) {
+    return {
+      ok: false,
+      error: 'Firebase is not initialized. Check your VITE_FIREBASE_* environment variables.',
+    };
+  }
 
   try {
-    const snapshot = await getDocs(collection(db, 'admins'));
-    const admins = snapshot.docs.map((docItem) => ({ id: docItem.id, ...(docItem.data() as Record<string, unknown>) }));
-
-    const matchedAdmin = admins.find((admin) => {
-      const adminEmail = String(admin.email || '').trim().toLowerCase();
-      const role = String((admin.role as string | undefined) || '').trim().toLowerCase();
-      const passwordMatches = String(admin.password || '') === password;
-
-      if (adminEmail !== normalizedEmail || !passwordMatches) {
-        return false;
-      }
-
-      return role === 'admin' || role === '';
-    });
-
-    if (matchedAdmin) {
-      return true;
-    }
-
-    if (normalizedEmail === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password) {
-      await setDoc(doc(db, 'admins', 'default-admin'), {
-        email: normalizedEmail,
-        password,
-        role: 'admin',
-        createdAt: new Date().toISOString(),
-      });
-      return true;
-    }
-
-    return false;
+    await signInWithEmailAndPassword(auth, normalizedEmail, password);
+    return { ok: true };
   } catch (error) {
-    console.error('Failed to verify admin credentials from Firebase', error);
-    return normalizedEmail === DEFAULT_ADMIN.email && password === DEFAULT_ADMIN.password;
+    const code = (error as AuthError)?.code || '';
+    let message = 'Incorrect admin email or password.';
+
+    if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) {
+      message = 'Incorrect admin email or password.';
+    } else if (code.includes('network') || code.includes('timeout') || code.includes('unavailable')) {
+      message = 'Unable to reach Firebase. Check your internet connection.';
+    } else if (code.includes('too-many-requests')) {
+      message = 'Too many failed attempts. Please try again later.';
+    } else if (code.includes('invalid-email')) {
+      message = 'Please enter a valid email address.';
+    }
+
+    console.error('Admin sign-in failed', error);
+    return { ok: false, error: message };
+  }
+};
+
+export const onAdminAuthStateChanged = (callback: (user: User | null) => void) => {
+  if (!auth) {
+    callback(null);
+    return () => undefined;
+  }
+
+  return onAuthStateChanged(auth, callback);
+};
+
+export const signOutAdmin = async () => {
+  if (!auth) return;
+
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error('Admin sign-out failed', error);
   }
 };

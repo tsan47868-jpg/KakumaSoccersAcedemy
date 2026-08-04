@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { saveSubmission } from '../lib/submissions';
 import {
   ArrowLeft,
   UserCheck,
@@ -21,6 +22,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
   onBackToHome,
 }) => {
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     parentName: '',
     parentPhone: '',
@@ -36,9 +38,34 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     agreeSafeguarding: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.agreeSafeguarding) return;
+
+    setIsSubmitting(true);
+
+    const submission = {
+      id: `register-${Date.now()}`,
+      type: 'join' as const,
+      fullName: formData.playerName,
+      email: formData.parentEmail || undefined,
+      phone: formData.parentPhone,
+      parentName: formData.parentName,
+      category: formData.ageGroup,
+      gender: formData.gender,
+      position: formData.position,
+      location: formData.locationInKakuma,
+      reason: 'Player Registration',
+      subject: `${formData.playerName} — ${formData.ageGroup} (${formData.gender})`,
+      message: [formData.medicalNotes, `Emergency contact: ${formData.emergencyContact}`]
+        .filter(Boolean)
+        .join(' | '),
+      notes: formData.medicalNotes,
+      createdAt: new Date().toLocaleString(),
+    };
+
+    await saveSubmission(submission);
+    setIsSubmitting(false);
     setSubmitted(true);
   };
 
@@ -242,11 +269,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
 
               <button
                 type="submit"
-                disabled={!formData.agreeSafeguarding}
+                disabled={!formData.agreeSafeguarding || isSubmitting}
                 className="w-full bg-[#123764] hover:bg-[#0c2545] disabled:bg-gray-300 text-white font-black text-xs sm:text-sm py-3.5 rounded-full shadow-lg transition-all flex items-center justify-center gap-2"
               >
-                <Send className="w-4 h-4 text-[#FDBD55]" />
-                <span>Submit Player Registration</span>
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving Registration…</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 text-[#FDBD55]" />
+                    <span>Submit Player Registration</span>
+                  </>
+                )}
               </button>
             </form>
           )}
