@@ -1,7 +1,7 @@
 import { addDoc, collection, getDocs, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../firebase';
 
-interface SubmissionPayload {
+export interface SubmissionPayload {
   id?: string;
   type: string;
   fullName: string;

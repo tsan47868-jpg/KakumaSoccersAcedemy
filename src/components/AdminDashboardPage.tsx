@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { subscribeToSubmissions } from '../lib/submissions';
+import { subscribeToSubmissions, type SubmissionPayload } from '../lib/submissions';
 import { signInAdmin, signOutAdmin, onAdminAuthStateChanged } from '../lib/admin';
 import {
   ArrowLeft,
@@ -28,6 +28,12 @@ interface AdminDashboardPageProps {
 
 type AdminTab = 'overview' | 'registrations' | 'fixtures' | 'stories' | 'messages' | 'donations';
 
+const sampleRegistrations: Array<{ id: string; name: string; age: number | string; ageGroup: string; guardian: string; phone: string; zone: string; date: string; email?: string }> = [
+  { id: 'reg-1', name: 'Joseph Deng', age: 16, ageGroup: 'U17', guardian: 'Mary Achan', phone: '+254 712 345 678', zone: 'Kakuma 1', date: 'Aug 1, 2026' },
+  { id: 'reg-2', name: 'Amina Mohamed', age: 15, ageGroup: 'Girls', guardian: 'Fatima Z.', phone: '+254 723 456 789', zone: 'Kalobeyei', date: 'Jul 28, 2026' },
+  { id: 'reg-3', name: 'Samuel Lual', age: 14, ageGroup: 'U15', guardian: 'Peter L.', phone: '+254 734 567 890', zone: 'Kakuma 2', date: 'Jul 25, 2026' },
+];
+
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onBackToHome,
 }) => {
@@ -41,7 +47,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionPayload[]>([]);
   const [storiesList, setStoriesList] = useState<any[]>(NEWS_ARTICLES);
   const [newStory, setNewStory] = useState({ title: '', summary: '', category: 'Community' });
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,12 +60,6 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     venue: '',
     division: 'Academy League',
   });
-
-const sampleRegistrations: Array<{ id: string; name: string; age: number | string; ageGroup: string; guardian: string; phone: string; zone: string; date: string; email?: string }> = [
-    { id: 'reg-1', name: 'Joseph Deng', age: 16, ageGroup: 'U17', guardian: 'Mary Achan', phone: '+254 712 345 678', zone: 'Kakuma 1', date: 'Aug 1, 2026' },
-    { id: 'reg-2', name: 'Amina Mohamed', age: 15, ageGroup: 'Girls', guardian: 'Fatima Z.', phone: '+254 723 456 789', zone: 'Kalobeyei', date: 'Jul 28, 2026' },
-    { id: 'reg-3', name: 'Samuel Lual', age: 14, ageGroup: 'U15', guardian: 'Peter L.', phone: '+254 734 567 890', zone: 'Kakuma 2', date: 'Jul 25, 2026' },
-  ];
 
   useEffect(() => {
     const unsubscribeAuth = onAdminAuthStateChanged((user) => {
